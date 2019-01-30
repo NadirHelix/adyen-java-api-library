@@ -23,10 +23,13 @@ package com.adyen.Util;
 import com.adyen.model.Amount;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public final class Util {
     private Util() {
@@ -70,9 +73,9 @@ public final class Util {
     /**
      * Returns an Amount struct to use on requests
      *
-     * @param amount
-     * @param currency
-     * @return
+     * @param amount Defines the amount
+     * @param currency Defines the amount currency
+     * @return amount
      */
     public static Amount createAmount(String amount, String currency) {
         return createAmount(new BigDecimal(amount), currency);
@@ -81,9 +84,9 @@ public final class Util {
     /**
      * Returns an Amount struct to use on requests
      *
-     * @param amount
-     * @param currency
-     * @return
+     * @param amount Defines the amount
+     * @param currency Defines the amount currency
+     * @return amount
      */
     public static Amount createAmount(BigDecimal amount, String currency) {
         Amount amountData = new Amount();
@@ -135,6 +138,8 @@ public final class Util {
     /**
      * Convert the given object to string with each line indented by 4 spaces
      * (except the first line).
+     * @param o string
+     * @return string target "\n" replacement with "\n    "
      */
     public static String toIndentedString(Object o) {
         if (o == null) {
@@ -149,6 +154,9 @@ public final class Util {
         calendar.add(Calendar.DATE, 1);
         Date sessionDate = calendar.getTime();
 
-        return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX").format(sessionDate);
+        DateFormat fmt = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.ENGLISH);
+        fmt.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        return fmt.format(sessionDate);
     }
 }

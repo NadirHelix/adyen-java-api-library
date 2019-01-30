@@ -23,6 +23,8 @@ package com.adyen;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 import org.junit.Test;
 import com.adyen.model.Address;
 import com.adyen.model.Amount;
@@ -86,8 +88,11 @@ import com.adyen.model.marketpay.UploadDocumentResponse;
 import com.adyen.service.Account;
 import com.adyen.service.Fund;
 import com.adyen.service.Payment;
+import static com.adyen.model.marketpay.KYCCheckStatusData.CheckStatusEnum.AWAITING_DATA;
 import static com.adyen.model.marketpay.KYCCheckStatusData.CheckStatusEnum.PASSED;
 import static com.adyen.model.marketpay.KYCCheckStatusData.CheckTypeEnum.BANK_ACCOUNT_VERIFICATION;
+import static com.adyen.model.marketpay.KYCCheckStatusData.CheckTypeEnum.COMPANY_VERIFICATION;
+import static com.adyen.model.marketpay.KYCCheckStatusData.CheckTypeEnum.PASSPORT_VERIFICATION;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -143,7 +148,9 @@ public class MarketPayTest extends BaseTest {
 
         assertTrue(paymentResult.isAuthorised());
 
-        SimpleDateFormat format = new SimpleDateFormat("M/yyyy");
+        SimpleDateFormat format = new SimpleDateFormat("M/yyyy", Locale.ENGLISH);
+        format.setTimeZone(TimeZone.getTimeZone("GMT"));
+
         assertEquals("8/2018", format.format(paymentResult.getExpiryDate()));
 
         assertEquals("411111", paymentResult.getCardBin());
@@ -274,7 +281,7 @@ public class MarketPayTest extends BaseTest {
         // create AccountHolderBalance Request
         AccountHolderBalanceRequest accountHolderBalanceRequest = new AccountHolderBalanceRequest();
         accountHolderBalanceRequest.accountHolderCode("TestAccountHolder877209");
-        AccountHolderBalanceResponse accountHolderBalanceResponse = fund.AccountHolderBalance(accountHolderBalanceRequest);
+        AccountHolderBalanceResponse accountHolderBalanceResponse = fund.accountHolderBalance(accountHolderBalanceRequest);
 
 
         assertEquals(new Long(42058), accountHolderBalanceResponse.getTotalBalance().getPendingBalance().get(0).getValue());
@@ -361,6 +368,8 @@ public class MarketPayTest extends BaseTest {
 
         assertEquals("681d5df6-cf38-4557-aecd-ac8ed0c04195", getAccountHolderResponse.getAccountHolderDetails().getBankAccountDetails().get(0).getBankAccountUUID());
         assertEquals("140922935", getAccountHolderResponse.getAccounts().get(0).getAccountCode());
+        assertEquals(PASSPORT_VERIFICATION, getAccountHolderResponse.getVerification().getAccountHolder().getChecks().get(0).getCheckType());
+        assertEquals(AWAITING_DATA, getAccountHolderResponse.getVerification().getAccountHolder().getChecks().get(0).getCheckStatus());
     }
 
     @Test
@@ -381,6 +390,9 @@ public class MarketPayTest extends BaseTest {
         assertEquals("1abf8304-58c7-4a9e-8bd3-4d7eff9801e4", getAccountHolderResponse.getAccountHolderDetails().getBankAccountDetails().get(0).getBankAccountUUID());
         assertEquals("67890", getAccountHolderResponse.getAccountHolderDetails().getBusinessDetails().getShareholders().get(0).getAddress().getPostalCode());
         assertEquals("123370698", getAccountHolderResponse.getAccounts().get(0).getAccountCode());
+        assertEquals(COMPANY_VERIFICATION, getAccountHolderResponse.getVerification().getAccountHolder().getChecks().get(0).getCheckType());
+        assertEquals(PASSED, getAccountHolderResponse.getVerification().getAccountHolder().getChecks().get(0).getCheckStatus());
+        assertEquals(1602, getAccountHolderResponse.getVerification().getAccountHolder().getChecks().get(0).getSummary().getCode().intValue());
     }
 
     @Test

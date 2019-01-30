@@ -1,4 +1,4 @@
-/**
+/*
  *                       ######
  *                       ######
  * ############    ####( ######  #####. ######  ############   ############
@@ -27,29 +27,34 @@ import com.adyen.model.recurring.DisableRequest;
 import com.adyen.model.recurring.DisableResult;
 import com.adyen.model.recurring.RecurringDetailsRequest;
 import com.adyen.model.recurring.RecurringDetailsResult;
+import com.adyen.model.recurring.StoreTokenRequest;
+import com.adyen.model.recurring.StoreTokenResult;
 import com.adyen.service.exception.ApiException;
 import com.adyen.service.resource.recurring.Disable;
 import com.adyen.service.resource.recurring.ListRecurringDetails;
+import com.adyen.service.resource.recurring.StoreToken;
 import com.google.gson.reflect.TypeToken;
 
 public class Recurring extends Service {
     private ListRecurringDetails listRecurringDetails;
     private Disable disable;
+    private StoreToken storeToken;
 
     public Recurring(Client client) {
         super(client);
 
         listRecurringDetails = new ListRecurringDetails(this);
         disable = new Disable(this);
+        storeToken = new StoreToken(this);
     }
 
     /**
      * Issues a listRecurringDetails API call
      *
-     * @param request
-     * @return
-     * @throws IOException
-     * @throws ApiException
+     * @param request RecurringDetailsResult
+     * @return recurring details result
+     * @throws IOException  IOException
+     * @throws ApiException ApiException
      */
     public RecurringDetailsResult listRecurringDetails(RecurringDetailsRequest request) throws IOException, ApiException {
         String jsonRequest = GSON.toJson(request);
@@ -63,10 +68,11 @@ public class Recurring extends Service {
 
     /**
      * Issues a disable recurring contract API call
-     * @param request
-     * @return
-     * @throws IOException
-     * @throws ApiException
+     *
+     * @param request DisableRequest
+     * @return DisableResult
+     * @throws IOException IOException
+     * @throws ApiException ApiException
      */
     public DisableResult disable(DisableRequest request) throws IOException, ApiException {
         String jsonRequest = GSON.toJson(request);
@@ -77,4 +83,23 @@ public class Recurring extends Service {
         }.getType());
         return result;
     }
+
+    /**
+     * Issues a storeToken API call
+     *
+     * @param request StoreTokenRequest
+     * @return StoreTokenResult
+     * @throws IOException IOException
+     * @throws ApiException ApiException
+     */
+    public StoreTokenResult storeToken(StoreTokenRequest request) throws IOException, ApiException {
+        String jsonRequest = GSON.toJson(request);
+
+        String jsonResult = storeToken.request(jsonRequest);
+
+        StoreTokenResult result = GSON.fromJson(jsonResult, new TypeToken<StoreTokenResult>() {
+        }.getType());
+        return result;
+    }
+
 }

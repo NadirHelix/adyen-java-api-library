@@ -30,21 +30,23 @@ public class Client {
 
     public static final String ENDPOINT_TEST = "https://pal-test.adyen.com";
     public static final String ENDPOINT_LIVE = "https://pal-live.adyen.com";
+    public static final String ENDPOINT_LIVE_SUFFIX = "-pal-live.adyenpayments.com";
     public static final String HPP_TEST = "https://test.adyen.com/hpp";
     public static final String HPP_LIVE = "https://live.adyen.com/hpp";
     public static final String MARKETPAY_ENDPOINT_TEST = "https://cal-test.adyen.com/cal/services";
     public static final String MARKETPAY_ENDPOINT_LIVE = "https://cal-live.adyen.com/cal/services";
-    public static final String API_VERSION = "v30";
+    public static final String API_VERSION = "v40";
     public static final String RECURRING_API_VERSION = "v25";
     public static final String MARKETPAY_ACCOUNT_API_VERSION = "v4";
     public static final String MARKETPAY_FUND_API_VERSION = "v3";
     public static final String MARKETPAY_NOTIFICATION_API_VERSION = "v1";
-    public static final String USER_AGENT_SUFFIX = "adyen-java-api-library/";
-    public static final String LIB_VERSION = "1.5.1";
-    public static final String CHECKOUT_ENDPOINT_TEST = "https://checkout-test.adyen.com";
-    public static final String CHECKOUT_ENDPOINT_LIVE = "https://checkout-live.adyen.com";
-    public static final String CHECKOUT_API_VERSION = "v32";
+    public static final String LIB_NAME = "adyen-java-api-library";
+    public static final String LIB_VERSION = "1.8.0";
+    public static final String CHECKOUT_ENDPOINT_TEST = "https://checkout-test.adyen.com/checkout";
+    public static final String CHECKOUT_ENDPOINT_LIVE_SUFFIX = "-checkout-live.adyenpayments.com/checkout";
+    public static final String CHECKOUT_API_VERSION = "v40";
     public static final String CHECKOUT_UTILITY_API_VERSION = "v1";
+    public static final String ENDPOINT_PROTOCOL = "https://";
 
     public Client() {
         this.config = new Config();
@@ -55,31 +57,120 @@ public class Client {
     }
 
     public Client(String username, String password, Environment environment, String applicationName) {
+        this(username, password, environment, null, applicationName);
+    }
+
+    public Client(String username, String password, Environment environment, String liveEndpointUrlPrefix, String applicationName) {
 
         this.config = new Config();
         this.config.setUsername(username);
         this.config.setPassword(password);
-        this.setEnvironment(environment);
+        this.setEnvironment(environment, liveEndpointUrlPrefix);
         this.config.setApplicationName(applicationName);
     }
 
-    public void setEnvironment(Environment environment) {
+    /**
+     * @param username your merchant account Username
+     * @param password your merchant accont Password
+     * @param environment This defines the payment enviroment live or test
+     * @param connectionTimeoutMillis Provide the time to time out
+     * @deprecated As of library version 1.6.1, timeouts should be set by {@link #setTimeouts(int connectionTimeoutMillis, int readTimeoutMillis)} or directly by {@link
+     * com.adyen.Config#setConnectionTimeoutMillis(int connectionTimeoutMillis)}.
+     */
+    @Deprecated
+    public Client(String username, String password, Environment environment, int connectionTimeoutMillis) {
 
-        if (environment.equals(Environment.TEST)) {
+        this(username, password, environment, null);
+        this.config.setConnectionTimeoutMillis(connectionTimeoutMillis);
+    }
+
+    /**
+     * @param username your merchant account Username
+     * @param password your merchant accont Password
+     * @param environment This defines the payment enviroment live or test
+     * @param connectionTimeoutMillis Provide the time to time out
+     * @param liveEndpointUrlPrefix provide the merchant specific url
+     * @deprecated As of library version 1.6.1, timeouts should be set by {@link #setTimeouts(int connectionTimeoutMillis, int readTimeoutMillis)} or directly by {@link
+     * com.adyen.Config#setConnectionTimeoutMillis(int connectionTimeoutMillis)}.
+     */
+    @Deprecated
+    public Client(String username, String password, Environment environment, int connectionTimeoutMillis, String liveEndpointUrlPrefix) {
+
+        this(username, password, environment, liveEndpointUrlPrefix, null);
+        this.config.setConnectionTimeoutMillis(connectionTimeoutMillis);
+    }
+
+    public Client(String apiKey, Environment environment) {
+        this(apiKey, environment, null);
+    }
+
+    public Client(String apiKey, Environment environment, String liveEndpointUrlPrefix) {
+        this.config = new Config();
+        this.config.setApiKey(apiKey);
+        this.setEnvironment(environment, liveEndpointUrlPrefix);
+    }
+
+    /**
+     * @param apiKey Defines the api key that can be retrieved by back office
+     * @param environment This defines the payment enviroment live or test
+     * @param connectionTimeoutMillis Provide the time to time out
+     * @deprecated As of library version 1.6.1, timeouts should be set by {@link #setTimeouts(int connectionTimeoutMillis, int readTimeoutMillis)} or directly by {@link
+     * com.adyen.Config#setConnectionTimeoutMillis(int connectionTimeoutMillis)}.
+     */
+    @Deprecated
+    public Client(String apiKey, Environment environment, int connectionTimeoutMillis) {
+
+        this(apiKey, environment);
+        this.config.setConnectionTimeoutMillis(connectionTimeoutMillis);
+    }
+
+    /**
+     * @param apiKey Defines the api key that can be retrieved by back office
+     * @param environment This defines the payment enviroment live or test
+     * @param connectionTimeoutMillis Provide the time to time out
+     * @param liveEndpointUrlPrefix provide the merchant specific url
+     * @deprecated As of library version 1.6.1, timeouts should be set by {@link #setTimeouts(int connectionTimeoutMillis, int readTimeoutMillis)} or directly by {@link
+     * com.adyen.Config#setConnectionTimeoutMillis(int connectionTimeoutMillis)}.
+     */
+    @Deprecated
+    public Client(String apiKey, Environment environment, int connectionTimeoutMillis, String liveEndpointUrlPrefix) {
+
+        this(apiKey, environment, liveEndpointUrlPrefix);
+        this.config.setConnectionTimeoutMillis(connectionTimeoutMillis);
+    }
+
+    /**
+     * @param environment This defines the payment enviroment live or test
+     * @deprecated As of library version 1.5.4, replaced by {@link #setEnvironment(Environment environment, String liveEndpointUrlPrefix)}.
+     */
+    @Deprecated
+    public void setEnvironment(Environment environment) {
+        this.setEnvironment(environment, null);
+    }
+
+    /**
+     * @param environment           This defines the payment enviroment live or test
+     * @param liveEndpointUrlPrefix Provide the unique live url prefix from the "API URLs and Response" menu in the Adyen Customer Area
+     */
+    public void setEnvironment(Environment environment, String liveEndpointUrlPrefix) {
+
+        if (Environment.TEST.equals(environment)) {
             this.config.setEnvironment(environment);
             this.config.setEndpoint(ENDPOINT_TEST);
             this.config.setMarketPayEndpoint(MARKETPAY_ENDPOINT_TEST);
             this.config.setHppEndpoint(HPP_TEST);
             this.config.setCheckoutEndpoint(CHECKOUT_ENDPOINT_TEST);
-
-        } else if (environment.equals(Environment.LIVE)) {
+        } else if (Environment.LIVE.equals(environment)) {
             this.config.setEnvironment(environment);
-            this.config.setEndpoint(ENDPOINT_LIVE);
             this.config.setMarketPayEndpoint(MARKETPAY_ENDPOINT_LIVE);
             this.config.setHppEndpoint(HPP_LIVE);
-            this.config.setCheckoutEndpoint(CHECKOUT_ENDPOINT_LIVE);
-        } else {
-            // throw exception
+            if (liveEndpointUrlPrefix != null && ! liveEndpointUrlPrefix.isEmpty()) {
+                this.config.setEndpoint(ENDPOINT_PROTOCOL + liveEndpointUrlPrefix + ENDPOINT_LIVE_SUFFIX);
+                this.config.setCheckoutEndpoint(ENDPOINT_PROTOCOL + liveEndpointUrlPrefix + CHECKOUT_ENDPOINT_LIVE_SUFFIX);
+            } else {
+                this.config.setEndpoint(ENDPOINT_LIVE);
+                this.config.setCheckoutEndpoint(null);
+            }
         }
     }
 
@@ -111,6 +202,11 @@ public class Client {
 
     public void setApplicationName(String applicationName) {
         this.config.setApplicationName(applicationName);
+    }
+
+    public void setTimeouts(int connectionTimeoutMillis, int readTimeoutMillis) {
+        this.config.setConnectionTimeoutMillis(connectionTimeoutMillis);
+        this.config.setReadTimeoutMillis(readTimeoutMillis);
     }
 
 }

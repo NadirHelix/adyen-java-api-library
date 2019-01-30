@@ -20,17 +20,18 @@
  */
 package com.adyen.service;
 
+import java.io.IOException;
+import java.util.List;
 import com.adyen.Config;
 import com.adyen.Service;
 import com.adyen.httpclient.ClientInterface;
 import com.adyen.httpclient.HTTPClientException;
 import com.adyen.model.ApiError;
+import com.adyen.model.RequestOptions;
 import com.adyen.service.exception.ApiException;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
-
-import java.io.IOException;
-import java.util.List;
 
 public class Resource {
 
@@ -48,25 +49,46 @@ public class Resource {
     /**
      * Request using json String
      *
-     * @param json
-     * @return
-     * @throws ApiException
-     * @throws IOException
+     * @param json request json
+     * @return request
+     * @throws ApiException ApiException
+     * @throws IOException  IOException
      */
     public String request(String json) throws ApiException, IOException {
+        return request(json, null);
+    }
+
+    /**
+     * Request using json String with additional request parameters like idempotency-key
+     *
+     * @param json   json
+     * @param requestOptions request options
+     * @throws ApiException apiException
+     * @throws IOException  IOException
+     * @return request
+     */
+    public String request(String json, RequestOptions requestOptions) throws ApiException, IOException {
         ClientInterface clientInterface = (ClientInterface) this.service.getClient().getHttpClient();
         Config config = this.service.getClient().getConfig();
-        String result = null;
+        String responseBody;
+        ApiException apiException;
+
         try {
-            result = clientInterface.request(this.endpoint, json, config, this.service.isApiKeyRequired());
+            return clientInterface.request(this.endpoint, json, config, this.service.isApiKeyRequired(), requestOptions);
         } catch (HTTPClientException e) {
-            String responseBody = e.getResponseBody();
+            responseBody = e.getResponseBody();
+            apiException = new ApiException(e.getMessage(), e.getCode());
+        }
+
+        // Enhance ApiException with more info from JSON payload
+        try {
             ApiError apiError = GSON.fromJson(responseBody, new TypeToken<ApiError>() {
             }.getType());
-            ApiException apiException = new ApiException(e.getMessage(), e.getCode());
             apiException.setError(apiError);
-            throw apiException;
+        } catch (JsonSyntaxException ignored) {
+            throw new ApiException("Invalid response or an invalid X-API-Key key was used", apiException.getStatusCode());
         }
-        return result;
+
+        throw apiException;
     }
 }

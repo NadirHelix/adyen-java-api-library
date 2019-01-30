@@ -20,13 +20,26 @@
  */
 package com.adyen;
 
-import com.adyen.model.Amount;
-import com.adyen.model.checkout.*;
-import com.adyen.service.Checkout;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
 import org.junit.Test;
-
-import java.util.HashMap;
-
+import com.adyen.model.Amount;
+import com.adyen.model.checkout.PaymentMethodDetails;
+import com.adyen.model.checkout.PaymentMethodsRequest;
+import com.adyen.model.checkout.PaymentMethodsResponse;
+import com.adyen.model.checkout.PaymentResultRequest;
+import com.adyen.model.checkout.PaymentResultResponse;
+import com.adyen.model.checkout.PaymentSessionRequest;
+import com.adyen.model.checkout.PaymentSessionResponse;
+import com.adyen.model.checkout.PaymentsDetailsRequest;
+import com.adyen.model.checkout.PaymentsRequest;
+import com.adyen.model.checkout.PaymentsResponse;
+import com.adyen.service.Checkout;
+import com.google.gson.annotations.SerializedName;
+import static com.adyen.enums.Environment.LIVE;
 import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -181,6 +194,81 @@ public class CheckoutTest extends BaseTest {
     }
 
     /**
+     * Test error flow on Checkout creation
+     */
+    @Test
+    public void TestPaymentMethodsFailureMissingIdentifierOnLive() throws Exception {
+        Client client = createMockClientFromFile("mocks/checkout/paymentsresult-error-invalid-data-payload-422.json");
+        client.setEnvironment(LIVE, "dumyPrefix");
+        try {
+            new Checkout(client);
+        } catch (IllegalArgumentException e) {
+            assertEquals("Please provide your unique live url prefix on the setEnvironment() call on the Client or provide checkoutEndpoint in your config object.", e.getMessage());
+        }
+
+    }
+
+    @Test
+    public void TestPaymentMethodDetails() {
+        PaymentsRequest paymentsRequest = createPaymentsCheckoutRequest();
+        paymentsRequest.setApplicationInfo(null);
+        String jsonRequest = PRETTY_PRINT_GSON.toJson(paymentsRequest);
+
+        assertEquals("{\n"
+                             + "  \"amount\": {\n"
+                             + "    \"value\": 1000,\n"
+                             + "    \"currency\": \"USD\"\n"
+                             + "  },\n"
+                             + "  \"merchantAccount\": \"MagentoMerchantTest\",\n"
+                             + "  \"paymentMethod\": {\n"
+                             + "    \"type\": \"scheme\",\n"
+                             + "    \"number\": \"4111111111111111\",\n"
+                             + "    \"expiryMonth\": \"10\",\n"
+                             + "    \"expiryYear\": \"2018\",\n"
+                             + "    \"holderName\": \"John Smith\",\n"
+                             + "    \"cvc\": \"737\"\n"
+                             + "  },\n"
+                             + "  \"reference\": \"Your order number\",\n"
+                             + "  \"returnUrl\": \"https://your-company.com/...\"\n"
+                             + "}", jsonRequest);
+
+        TestPaymentMethodDetails testPaymentMethodDetails = new TestPaymentMethodDetails();
+        testPaymentMethodDetails.setType("testType");
+        testPaymentMethodDetails.setTestValue("testValue");
+        paymentsRequest.setPaymentMethod(testPaymentMethodDetails);
+
+        jsonRequest = PRETTY_PRINT_GSON.toJson(paymentsRequest);
+        assertEquals("{\n"
+                             + "  \"amount\": {\n"
+                             + "    \"value\": 1000,\n"
+                             + "    \"currency\": \"USD\"\n"
+                             + "  },\n"
+                             + "  \"merchantAccount\": \"MagentoMerchantTest\",\n"
+                             + "  \"paymentMethod\": {\n"
+                             + "    \"testKey\": \"testValue\",\n"
+                             + "    \"type\": \"testType\"\n"
+                             + "  },\n"
+                             + "  \"reference\": \"Your order number\",\n"
+                             + "  \"returnUrl\": \"https://your-company.com/...\"\n"
+                             + "}", jsonRequest);
+    }
+
+    @Test
+    public void TestDateSerializers() throws ParseException {
+        PaymentsRequest paymentsRequest = new PaymentsRequest();
+        paymentsRequest.setApplicationInfo(null);
+
+        SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH);
+        fmt.setTimeZone(TimeZone.getTimeZone("GMT"));
+
+        Date d = fmt.parse("2018-10-31");
+        paymentsRequest.setDateOfBirth(d);
+        paymentsRequest.setDeliveryDate(d);
+        String jsonRequest = PRETTY_PRINT_GSON.toJson(paymentsRequest);
+        assertEquals("{\n" + "  \"dateOfBirth\": \"2018-10-31\",\n" + "  \"deliveryDate\": \"2018-10-31T00:00:00.000Z\"\n" + "}", jsonRequest);
+    }
+
+    /**
      * Returns a sample PaymentSessionRequest opbject with test data
      */
 
@@ -203,15 +291,7 @@ public class CheckoutTest extends BaseTest {
 
         paymentsRequest.setReference("Your order number");
         paymentsRequest.setAmount(createAmountObject("USD", 1000L));
-        PaymentMethod paymentMethod = new PaymentMethod();
-        paymentMethod.setType("scheme");
-        paymentsRequest.setPaymentMethod(new HashMap<String, String>());
-
-        paymentsRequest.putPaymentMethodItem("number", "4111111111111111");
-        paymentsRequest.putPaymentMethodItem("expiryMonth", "08");
-        paymentsRequest.putPaymentMethodItem("expiryYear", "2018");
-        paymentsRequest.putPaymentMethodItem("holderName", "John Smith");
-        paymentsRequest.putPaymentMethodItem("cvc", "737");
+        paymentsRequest.addCardData("4111111111111111", "10", "2018", "737", "John Smith");
 
         paymentsRequest.setReturnUrl("https://your-company.com/...");
         paymentsRequest.setMerchantAccount("MagentoMerchantTest");
@@ -226,10 +306,7 @@ public class CheckoutTest extends BaseTest {
     protected PaymentsDetailsRequest createPaymentsDetailsRequest() {
         PaymentsDetailsRequest paymentsDetailsRequest = new PaymentsDetailsRequest();
         paymentsDetailsRequest.setPaymentData("Ab02b4c0!BQABAgCJN1wRZuGJmq8dMncmypvknj9s7l5Tj...");
-        HashMap<String, String> details = new HashMap<>();
-        details.put("MD", "sdfsdfsdf...");
-        details.put("PaRes", "sdfsdfsdf...");
-        paymentsDetailsRequest.setDetails(details);
+        paymentsDetailsRequest.set3DRequestData("mdValue", "paResValue", "paymentDataValue");
         return paymentsDetailsRequest;
     }
 
@@ -241,5 +318,31 @@ public class CheckoutTest extends BaseTest {
         amount.setCurrency(currency);
         amount.setValue(value);
         return amount;
+    }
+}
+
+class TestPaymentMethodDetails implements PaymentMethodDetails {
+    @SerializedName("testKey")
+    private String testValue;
+
+    @SerializedName("type")
+    private String type;
+
+    @Override
+    public String getType() {
+        return type;
+    }
+
+    @Override
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getTestValue() {
+        return testValue;
+    }
+
+    public void setTestValue(String testValue) {
+        this.testValue = testValue;
     }
 }

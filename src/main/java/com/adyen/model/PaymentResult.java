@@ -20,8 +20,6 @@
  */
 package com.adyen.model;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
@@ -398,19 +396,7 @@ public class PaymentResult {
 
     public Date getExpiryDate() {
         String expiryDate = getAdditionalDataByKey(EXPIRY_DATE);
-        if (expiryDate == null) {
-            return null;
-        }
-
-        Date date;
-        SimpleDateFormat monthYear = new SimpleDateFormat("M/yyyy");
-        try {
-            date = monthYear.parse(expiryDate);
-        } catch (ParseException e) {
-            return null;
-        }
-
-        return date;
+        return DateUtil.parseMYDate(expiryDate);
     }
 
     public String getCardBin() {

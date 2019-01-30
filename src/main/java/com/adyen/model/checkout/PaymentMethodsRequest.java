@@ -21,15 +21,20 @@
 
 package com.adyen.model.checkout;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import com.adyen.model.AccountInfo;
 import com.adyen.model.Amount;
+import com.adyen.model.MerchantRiskIndicator;
+import com.adyen.model.Split;
+import com.adyen.model.ThreeDS2RequestData;
+import com.adyen.model.applicationinfo.ApplicationInfo;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-
-import java.io.IOException;
-import java.util.Objects;
 
 /**
  * PaymentMethodsRequest
@@ -48,10 +53,101 @@ public class PaymentMethodsRequest {
     private String shopperLocale = null;
     @SerializedName("shopperReference")
     private String shopperReference = null;
+    @SerializedName("allowedPaymentMethods")
+    private List<String> allowedPaymentMethods;
+    @SerializedName("blockedPaymentMethods")
+    private List<String> blockedPaymentMethods;
+    @SerializedName("additionalData")
+    private Object additionalData = null;
+
+    @SerializedName("accountInfo")
+    private AccountInfo accountInfo = null;
+
+    @SerializedName("applciationInfo")
+    private ApplicationInfo applicationInfo = null;
+
+    @SerializedName("configId")
+    private String configId = null;
+
+    @SerializedName("merchantRiskIndicator")
+    private MerchantRiskIndicator merchantRiskIndicator = null;
+
+    @SerializedName("splits")
+    private List<Split> splits = null;
+
+    @SerializedName("threeDS2RequestData")
+    private ThreeDS2RequestData threeDS2RequestData = null;
+
+    @SerializedName("trustedShopper")
+    private Boolean trustedShopper = null;
+
+    public Object getAdditionalData() {
+        return additionalData;
+    }
+
+    public void setAdditionalData(Object additionalData) {
+        this.additionalData = additionalData;
+    }
+
+    public AccountInfo getAccountInfo() {
+        return accountInfo;
+    }
+
+    public void setAccountInfo(AccountInfo accountInfo) {
+        this.accountInfo = accountInfo;
+    }
+
+    public ApplicationInfo getApplicationInfo() {
+        return applicationInfo;
+    }
+
+    public void setApplicationInfo(ApplicationInfo applicationInfo) {
+        this.applicationInfo = applicationInfo;
+    }
 
     public PaymentMethodsRequest amount(Amount amount) {
         this.amount = amount;
         return this;
+    }
+
+    public String getConfigId() {
+        return configId;
+    }
+
+    public void setConfigId(String configId) {
+        this.configId = configId;
+    }
+
+    public MerchantRiskIndicator getMerchantRiskIndicator() {
+        return merchantRiskIndicator;
+    }
+
+    public void setMerchantRiskIndicator(MerchantRiskIndicator merchantRiskIndicator) {
+        this.merchantRiskIndicator = merchantRiskIndicator;
+    }
+
+    public List<Split> getSplits() {
+        return splits;
+    }
+
+    public void setSplits(List<Split> splits) {
+        this.splits = splits;
+    }
+
+    public ThreeDS2RequestData getThreeDS2RequestData() {
+        return threeDS2RequestData;
+    }
+
+    public void setThreeDS2RequestData(ThreeDS2RequestData threeDS2RequestData) {
+        this.threeDS2RequestData = threeDS2RequestData;
+    }
+
+    public Boolean getTrustedShopper() {
+        return trustedShopper;
+    }
+
+    public void setTrustedShopper(Boolean trustedShopper) {
+        this.trustedShopper = trustedShopper;
     }
 
     /**
@@ -73,7 +169,8 @@ public class PaymentMethodsRequest {
     }
 
     /**
-     * The platform where a payment transaction takes place. This field can be used for filtering out payment methods that are only available on specific platforms. Possible values: * iOS * Android * Web
+     * The platform where a payment transaction takes place. This field can be used for filtering out payment methods that are only available on specific platforms. Possible values: * iOS * Android *
+     * Web
      *
      * @return channel
      **/
@@ -157,6 +254,22 @@ public class PaymentMethodsRequest {
         this.shopperReference = shopperReference;
     }
 
+    public List<String> getAllowedPaymentMethods() {
+        return allowedPaymentMethods;
+    }
+
+    public void setAllowedPaymentMethods(List<String> allowedPaymentMethods) {
+        this.allowedPaymentMethods = allowedPaymentMethods;
+    }
+
+    public List<String> getBlockedPaymentMethods() {
+        return blockedPaymentMethods;
+    }
+
+    public void setBlockedPaymentMethods(List<String> blockedPaymentMethods) {
+        this.blockedPaymentMethods = blockedPaymentMethods;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -166,17 +279,27 @@ public class PaymentMethodsRequest {
             return false;
         }
         PaymentMethodsRequest paymentMethodsRequest = (PaymentMethodsRequest) o;
-        return Objects.equals(this.amount, paymentMethodsRequest.amount) &&
-                Objects.equals(this.channel, paymentMethodsRequest.channel) &&
-                Objects.equals(this.countryCode, paymentMethodsRequest.countryCode) &&
-                Objects.equals(this.merchantAccount, paymentMethodsRequest.merchantAccount) &&
-                Objects.equals(this.shopperLocale, paymentMethodsRequest.shopperLocale) &&
-                Objects.equals(this.shopperReference, paymentMethodsRequest.shopperReference);
+        return Objects.equals(this.amount, paymentMethodsRequest.amount)
+                && Objects.equals(this.channel, paymentMethodsRequest.channel)
+                && Objects.equals(this.countryCode,
+                                  paymentMethodsRequest.countryCode)
+                && Objects.equals(this.merchantAccount, paymentMethodsRequest.merchantAccount)
+                && Objects.equals(this.shopperLocale, paymentMethodsRequest.shopperLocale)
+                && Objects.equals(this.allowedPaymentMethods, paymentMethodsRequest.allowedPaymentMethods)
+                && Objects.equals(this.blockedPaymentMethods, paymentMethodsRequest.blockedPaymentMethods)
+                && Objects.equals(this.shopperReference, paymentMethodsRequest.shopperReference)
+                && Objects.equals(this.accountInfo, paymentMethodsRequest.accountInfo)
+                && Objects.equals(this.configId, paymentMethodsRequest.configId)
+                && Objects.equals(this.trustedShopper, paymentMethodsRequest.trustedShopper)
+                && Objects.equals(this.threeDS2RequestData, paymentMethodsRequest.threeDS2RequestData)
+                && Objects.equals(this.merchantRiskIndicator, paymentMethodsRequest.merchantRiskIndicator)
+                && Objects.equals(this.splits, paymentMethodsRequest.splits)
+                && Objects.equals(this.applicationInfo, paymentMethodsRequest.applicationInfo);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(amount, channel, countryCode, merchantAccount, shopperLocale, shopperReference);
+        return Objects.hash(amount, channel, countryCode, merchantAccount, shopperLocale, shopperReference, allowedPaymentMethods, blockedPaymentMethods);
     }
 
     @Override
@@ -184,12 +307,24 @@ public class PaymentMethodsRequest {
         StringBuilder sb = new StringBuilder();
         sb.append("class PaymentMethodsRequest {\n");
 
+        sb.append("    additionalData: ").append(toIndentedString(additionalData)).append("\n");
+        sb.append("    allowedPaymentMethods: ").append(toIndentedString(allowedPaymentMethods)).append("\n");
         sb.append("    amount: ").append(toIndentedString(amount)).append("\n");
+        sb.append("    blockedPaymentMethods: ").append(toIndentedString(blockedPaymentMethods)).append("\n");
         sb.append("    channel: ").append(toIndentedString(channel)).append("\n");
         sb.append("    countryCode: ").append(toIndentedString(countryCode)).append("\n");
         sb.append("    merchantAccount: ").append(toIndentedString(merchantAccount)).append("\n");
         sb.append("    shopperLocale: ").append(toIndentedString(shopperLocale)).append("\n");
         sb.append("    shopperReference: ").append(toIndentedString(shopperReference)).append("\n");
+        sb.append("    accountInfo: ").append(toIndentedString(accountInfo)).append("\n");
+        sb.append("    applicationInfo: ").append(toIndentedString(applicationInfo)).append("\n");
+        sb.append("    configId: ").append(toIndentedString(configId)).append("\n");
+        sb.append("    trustedShopper: ").append(toIndentedString(trustedShopper)).append("\n");
+        sb.append("    threeDS2RequestData: ").append(toIndentedString(threeDS2RequestData)).append("\n");
+        sb.append("    merchantRiskIndicator: ").append(toIndentedString(merchantRiskIndicator)).append("\n");
+        sb.append("    splits: ").append(toIndentedString(splits)).append("\n");
+
+
         sb.append("}");
         return sb.toString();
     }
@@ -206,7 +341,8 @@ public class PaymentMethodsRequest {
     }
 
     /**
-     * The platform where a payment transaction takes place. This field can be used for filtering out payment methods that are only available on specific platforms. Possible values: * iOS * Android * Web
+     * The platform where a payment transaction takes place. This field can be used for filtering out payment methods that are only available on specific platforms. Possible values: * iOS * Android *
+     * Web
      */
     @JsonAdapter(ChannelEnum.Adapter.class)
     public enum ChannelEnum {

@@ -1,4 +1,4 @@
-/**
+/*
  *                       ######
  *                       ######
  * ############    ####( ######  #####. ######  ############   ############
@@ -24,9 +24,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import com.adyen.model.Split;
 import com.adyen.model.additionalData.InvoiceLine;
 import com.adyen.model.additionalData.SplitPayment;
 import com.adyen.model.additionalData.SplitPaymentItem;
+import com.adyen.model.applicationinfo.ApplicationInfo;
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -47,6 +49,12 @@ public class AbstractModificationRequest<T extends AbstractModificationRequest<T
 
     @SerializedName("additionalData")
     private Map<String, String> additionalData = null;
+
+    @SerializedName("applicationInfo")
+    private ApplicationInfo applicationInfo;
+
+    @SerializedName("splits")
+    private List<Split> splits = null;
 
     public T reference(String reference) {
         this.reference = reference;
@@ -120,6 +128,19 @@ public class AbstractModificationRequest<T extends AbstractModificationRequest<T
         this.merchantAccount = merchantAccount;
     }
 
+    public ApplicationInfo getApplicationInfo() {
+        return applicationInfo;
+    }
+
+    public void setApplicationInfo(ApplicationInfo applicationInfo) {
+        this.applicationInfo = applicationInfo;
+    }
+
+    public T applicationInfo(ApplicationInfo applicationInfo) {
+        this.applicationInfo = applicationInfo;
+        return (T) this;
+    }
+
     public Map<String, String> getAdditionalData() {
         return additionalData;
     }
@@ -128,11 +149,18 @@ public class AbstractModificationRequest<T extends AbstractModificationRequest<T
         this.additionalData = additionalData;
     }
 
+    public List<Split> getSplits() {
+        return splits;
+    }
+
+    public void setSplits(List<Split> splits) {
+        this.splits = splits;
+    }
+
     /**
-     * get additionalData map
-     * Create the map if doesn't exists
+     * get additionalData map Create the map if doesn't exists
      *
-     * @return
+     * @return additional data
      */
     public Map<String, String> getOrCreateAdditionalData() {
         if (this.getAdditionalData() == null) {
@@ -144,6 +172,8 @@ public class AbstractModificationRequest<T extends AbstractModificationRequest<T
 
     /**
      * Set invoiceLines in addtionalData
+     * @param invoiceLines invoicelines
+     * @return InvoiceLines
      */
     public T setInvoiceLines(List<InvoiceLine> invoiceLines) {
 
@@ -221,12 +251,13 @@ public class AbstractModificationRequest<T extends AbstractModificationRequest<T
                 && Objects.equals(this.originalReference,
                                   modificationRequest.originalReference)
                 && Objects.equals(this.merchantAccount, modificationRequest.merchantAccount)
+                && Objects.equals(this.applicationInfo, modificationRequest.applicationInfo)
                 && Objects.equals(this.additionalData, modificationRequest.additionalData);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(reference, authorisationCode, originalReference, merchantAccount, additionalData);
+        return Objects.hash(reference, authorisationCode, originalReference, merchantAccount, additionalData, applicationInfo);
     }
 
     @Override
@@ -237,14 +268,17 @@ public class AbstractModificationRequest<T extends AbstractModificationRequest<T
         sb.append("    authorisationCode: ").append(toIndentedString(authorisationCode)).append("\n");
         sb.append("    originalReference: ").append(toIndentedString(originalReference)).append("\n");
         sb.append("    merchantAccount: ").append(toIndentedString(merchantAccount)).append("\n");
+        sb.append("    applicationInfo: ").append(toIndentedString(additionalData)).append("\n");
         sb.append("    additionalData: ").append(toIndentedString(additionalData)).append("\n");
 
         return sb.toString();
     }
 
     /**
-     * Convert the given object to string with each line indented by 4 spaces
-     * (except the first line).
+     * Convert the given object to string with each line indented by 4 spaces (except the first line).
+     *
+     * @param o string
+     * @return Indented string
      */
     private String toIndentedString(Object o) {
         if (o == null) {

@@ -20,26 +20,45 @@
  */
 package com.adyen;
 
-import com.adyen.Util.DateUtil;
-import com.adyen.enums.VatCategory;
-import com.adyen.httpclient.HTTPClientException;
-import com.adyen.httpclient.HttpURLConnectionClient;
-import com.adyen.model.*;
-import com.adyen.model.additionalData.InvoiceLine;
-import com.adyen.model.modification.AbstractModificationRequest;
-import com.adyen.model.modification.CaptureRequest;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
-
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import com.adyen.Util.DateUtil;
+import com.adyen.Util.Util;
+import com.adyen.enums.VatCategory;
+import com.adyen.httpclient.HTTPClientException;
+import com.adyen.httpclient.HttpURLConnectionClient;
+import com.adyen.model.AbstractPaymentRequest;
+import com.adyen.model.Address;
+import com.adyen.model.Amount;
+import com.adyen.model.Name;
+import com.adyen.model.PaymentRequest;
+import com.adyen.model.PaymentRequest3d;
+import com.adyen.model.PaymentRequest3ds2;
+import com.adyen.model.RequestOptions;
+import com.adyen.model.ThreeDS2RequestData;
+import com.adyen.model.additionalData.InvoiceLine;
+import com.adyen.model.modification.AbstractModificationRequest;
+import com.adyen.model.modification.CaptureRequest;
+import com.adyen.model.modification.RefundRequest;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.isNull;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class BaseTest {
+    protected static final Gson PRETTY_PRINT_GSON = new GsonBuilder().setPrettyPrinting().create();
+
     /**
      * Returns a Client object that has a mocked response
      */
@@ -47,7 +66,9 @@ public class BaseTest {
         HttpURLConnectionClient httpURLConnectionClient = mock(HttpURLConnectionClient.class);
         try {
             when(httpURLConnectionClient.post(any(String.class), any(Map.class), any(Config.class))).thenReturn(response);
-            when(httpURLConnectionClient.request(any(String.class), any(String.class), any(Config.class), anyBoolean())).thenReturn(response);
+            when(httpURLConnectionClient.request(any(String.class), any(String.class), any(Config.class), anyBoolean(), any(RequestOptions.class))).thenReturn(response);
+            when(httpURLConnectionClient.request(any(String.class), any(String.class), any(Config.class), anyBoolean(), (RequestOptions) isNull())).thenReturn(response);
+
         } catch (IOException | HTTPClientException e) {
             e.printStackTrace();
         }
@@ -56,6 +77,7 @@ public class BaseTest {
 
         Config config = new Config();
         config.setHmacKey("DFB1EB5485895CFA84146406857104ABB4CBCABDC8AAF103A624C8F6A3EAAB00");
+        config.setCheckoutEndpoint(Client.CHECKOUT_ENDPOINT_TEST);
         client.setConfig(config);
 
         return client;
@@ -82,7 +104,7 @@ public class BaseTest {
             int length;
             InputStream fileStream = classLoader.getResourceAsStream(fileName);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            while ((length = fileStream.read(buffer)) != -1) {
+            while ((length = fileStream.read(buffer)) != - 1) {
                 outputStream.write(buffer, 0, length);
             }
             result = outputStream.toString(StandardCharsets.UTF_8.name());
@@ -98,8 +120,8 @@ public class BaseTest {
      */
     protected <T extends AbstractPaymentRequest> T createBasePaymentRequest(T abstractPaymentRequest) {
         abstractPaymentRequest.merchantAccount("AMerchant")
-                .setBrowserInfoData("User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36", "*/*")
-                .setShopperIP("1.2.3.4");
+                              .setBrowserInfoData("User-Agent:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.95 Safari/537.36", "*/*")
+                              .setShopperIP("1.2.3.4");
 
         return abstractPaymentRequest;
     }
@@ -109,8 +131,8 @@ public class BaseTest {
      */
     protected PaymentRequest createFullCardPaymentRequest() {
         PaymentRequest paymentRequest = createBasePaymentRequest(new PaymentRequest()).reference("123456")
-                .setAmountData("1000", "EUR")
-                .setCardData("5136333333333335", "John Doe", "08", "2018", "737");
+                                                                                      .setAmountData("1000", "EUR")
+                                                                                      .setCardData("5136333333333335", "John Doe", "08", "2018", "737");
 
         return paymentRequest;
     }
@@ -206,6 +228,18 @@ public class BaseTest {
     }
 
     /**
+     * Returns a PaymentRequest3d object for 3D secure authorisation
+     */
+    protected PaymentRequest3ds2 create3DS2PaymentRequest() {
+
+        PaymentRequest3ds2 paymentRequest3ds2 = createBasePaymentRequest(new PaymentRequest3ds2());
+        paymentRequest3ds2.setThreeDS2Token("— - BINARY DATA - -");
+        paymentRequest3ds2.setThreeDS2RequestData(new ThreeDS2RequestData());
+        paymentRequest3ds2.getThreeDS2RequestData().setThreeDSCompInd("Y");
+        return paymentRequest3ds2;
+    }
+
+    /**
      * Returns a Client that has a mocked error response from fileName
      */
     protected Client createMockClientForErrors(int status, String fileName) {
@@ -214,7 +248,7 @@ public class BaseTest {
         HttpURLConnectionClient httpURLConnectionClient = mock(HttpURLConnectionClient.class);
         HTTPClientException httpClientException = new HTTPClientException(status, "An error occured", new HashMap<String, List<String>>(), response);
         try {
-            when(httpURLConnectionClient.request(any(String.class), any(String.class), any(Config.class), anyBoolean())).thenThrow(httpClientException);
+            when(httpURLConnectionClient.request(any(String.class), any(String.class), any(Config.class), anyBoolean(), (RequestOptions) isNull())).thenThrow(httpClientException);
         } catch (IOException | HTTPClientException e) {
             fail("Unexpected exception: " + e.getMessage());
         }
@@ -235,5 +269,11 @@ public class BaseTest {
         captureRequest.fillAmount("15.00", "EUR");
 
         return captureRequest;
+    }
+
+    protected RefundRequest createRefundRequest() {
+        Amount amount = Util.createAmount("15.00", "EUR");
+
+        return createBaseModificationRequest(new RefundRequest()).modificationAmount(amount);
     }
 }

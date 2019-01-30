@@ -31,6 +31,8 @@ public class Config {
     protected String marketPayEndpoint;
     protected String applicationName;
     protected String apiKey;
+    protected int connectionTimeoutMillis;
+    protected int readTimeoutMillis;
 
     //HPP specific
     protected String hppEndpoint;
@@ -39,7 +41,6 @@ public class Config {
 
     //Checkout Specific
     protected String checkoutEndpoint;
-
 
     public Config() {
         // do nothing
@@ -134,6 +135,10 @@ public class Config {
     }
 
     public String getCheckoutEndpoint() {
+        if (checkoutEndpoint == null || checkoutEndpoint.isEmpty()) {
+            String message = "Please provide your unique live url prefix on the setEnvironment() call on the Client or provide checkoutEndpoint in your config object.";
+            throw new IllegalArgumentException(message);
+        }
         return checkoutEndpoint;
     }
 
@@ -141,5 +146,20 @@ public class Config {
         this.checkoutEndpoint = checkoutEndpoint;
     }
 
+    public int getConnectionTimeoutMillis() {
+        return connectionTimeoutMillis;
+    }
+
+    public void setConnectionTimeoutMillis(int connectionTimeoutMillis) {
+        this.connectionTimeoutMillis = connectionTimeoutMillis;
+    }
+
+    public int getReadTimeoutMillis() {
+        return readTimeoutMillis;
+    }
+
+    public void setReadTimeoutMillis(int readTimeoutMillis) {
+        this.readTimeoutMillis = readTimeoutMillis;
+    }
 
 }
